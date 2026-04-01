@@ -68,18 +68,46 @@ if run:
         t_tot, t_ser, count = run_hpc_job(N_val, c)
         results.append({"Cores": c, "Time": t_tot, "Serial": t_ser})
     
+    # --- 1. DATA PROCESSING ---
     df = pd.DataFrame(results)
     t1 = df['Time'].iloc[0]
     df['Speedup'] = t1 / df['Time']
     df['Efficiency'] = (df['Speedup'] / df['Cores']) * 100
 
+    # --- 2. PRIMARY PERFORMANCE CHARTS ---
+    st.subheader("🚀 Speedup & Efficiency Analysis")
     c1, c2 = st.columns(2)
-    with c1: st.line_chart(df.set_index('Cores')['Speedup'])
-    with c2: st.bar_chart(df.set_index('Cores')['Efficiency'])
+    with c1: 
+        st.write("**Amdahl's Speedup**")
+        st.line_chart(df.set_index('Cores')['Speedup'])
+    with c2: 
+        st.write("**Parallel Efficiency (%)**")
+        st.bar_chart(df.set_index('Cores')['Efficiency'])
 
+    # --- 3. THEORETICAL LIMITS ---
     s_frac = df['Serial'].mean() / df['Time'].iloc[0]
     st.info(f"Serial Fraction (s): {s_frac:.4f} | Max Theoretical Speedup: {1/s_frac:.2f}x")
+    
     st.divider()
-st.subheader("💻 Node Specifications")
-st.write(f"**CPU Cores Detected:** {multiprocessing.cpu_count()}")
-st.write("**Architecture:** Shared-Memory Multiprocessing (Symmetric)")
+
+    # --- 4. NEW VISUALIZATION 1: WORKLOAD DISTRIBUTION ---
+    st.subheader("📊 Core Workload Distribution")
+    # Each core processes a portion of N_val
+    workload_data = {"Core": [f"Core {i+1}" for i in range(len(cores))], 
+                     "Numbers Processed": [N_val // len(cores)] * len(cores)}
+    st.bar_chart(pd.DataFrame(workload_data).set_index("Core"))
+
+    # --- 5. NEW VISUALIZATION 2: EXECUTION TIME TREND ---
+    st.subheader("📉 Execution Time Trend")
+    fig_time, ax_time = plt.subplots()
+    ax_time.plot(df['Cores'], df['Time'], marker='s', color='green', label='Actual Time')
+    ax_time.set_xlabel("Number of Cores")
+    ax_time.set_ylabel("Seconds")
+    ax_time.grid(True, linestyle='--')
+    st.pyplot(fig_time)
+
+    # --- 6. NODE SPECIFICATIONS (Inside the run block to show after execution) ---
+    st.divider()
+    st.subheader("💻 Node Specifications")
+    st.write(f"**CPU Cores Detected:** {multiprocessing.cpu_count()}")
+    st.write("**Architecture:** Shared-Memory Multiprocessing (Symmetric)")
