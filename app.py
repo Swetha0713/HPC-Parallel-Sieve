@@ -79,3 +79,7 @@ if run:
 
     s_frac = df['Serial'].mean() / df['Time'].iloc[0]
     st.info(f"Serial Fraction (s): {s_frac:.4f} | Max Theoretical Speedup: {1/s_frac:.2f}x")
+    st.divider()
+st.subheader("💻 Node Specifications")
+st.write(f"**CPU Cores Detected:** {multiprocessing.cpu_count()}")
+st.write("**Architecture:** Shared-Memory Multiprocessing (Symmetric)")
